@@ -1,0 +1,113 @@
+#!/usr/bin/sh
+
+case $1 in
+	'')
+		rm -f ~/.local/share/plansh/todo/todo/*~
+		ls ~/.local/share/plansh/todo/todo | aff -tE 'date -d "$(head -n1 ~/.local/share/plansh/todo/todo/"$LINE")" +%s' | sort -g | cut -f2 | aff -StE 'date -d "$(head -n1 ~/.local/share/plansh/todo/todo/"$LINE")" "+%x @ %R"'
+		;;
+	'-h'|'--help'|'help')
+		echo 'Usage: todo [COMMAND|TODO]'
+		echo 'manage to-dos'
+		echo
+		echo "To-dos are saved at '~/.local/share/plansh/todo/'."
+		echo
+		echo "With no command, list pending to-dos and remove Emacs tempfiles."
+		echo
+		echo 'COMMAND:'
+		echo '    done            list completed to-dos'
+		echo "    edit   TODO     open TODO in '`basename ${EDITOR:-vi}`'"
+		echo '    init            create todo directory'
+		echo '    mark   TODO     mark TODO as done'
+		echo '    rm     TODO     delete TODO'
+		echo '    undone DONE     mark task DONE as to-do'
+		echo '    help            print this help'
+		echo '    version         print version and license information'
+		echo
+		echo 'TODO:'
+		echo '    Create task TODO if it does not exist, otherwise print task'
+		echo 
+		echo "First line of TODO must contain due/completion date/time."
+		exit
+		;;
+	'-v'|'--version'|'version')
+		echo 'todo v1.0.1'
+		echo 'Copyright (C) 2024 Jack Renton Uteg.'
+		echo 'License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.'
+		echo 'This is free software: you are free to change and redistribute it.'
+		echo 'There is NO WARRANTY, to the extent permitted by law.'
+		echo
+		echo 'Written by Jack Renton Uteg.'
+		exit
+		;;
+	'done')
+		ls -rt ~/.local/share/plansh/todo/done | aff -StE 'date -d@$(stat ~/.local/share/plansh/todo/done/"$line" -c%Y) "+%x @ %R"'
+		;;
+	'init')
+		mkdir -p ~/.local/share/plansh/todo
+		mkdir ~/.local/share/plansh/todo/todo
+		mkdir ~/.local/share/plansh/todo/done
+		;;
+	'mark')
+		if [ -z "$2" ]
+		then
+			echo "todo mark: no todo specified"
+			exit 1
+		fi
+		if [ -f ~/.local/share/plansh/todo/todo/"$2" ]
+		then
+			mv ~/.local/share/plansh/todo/todo/"$2" ~/.local/share/plansh/todo/done
+			touch ~/.local/share/plansh/todo/done/"$2"
+		else
+			echo "todo mark: $2: no such todo"
+			exit 1
+		fi
+		;;
+	'edit')
+		if [ -z "$2" ]
+		then
+			echo "todo edit: no todo specified"
+			exit 1
+		fi
+		if [ -f ~/.local/share/plansh/todo/todo/"$2" ]
+		then
+			${EDITOR:-vi} ~/.local/share/plansh/todo/todo/"$2"
+		else
+			echo "todo edit: $2: no such todo"
+			exit 1
+		fi
+		;;
+	'rm')
+		if [ -z "$2" ]
+		then
+			echo "todo rm: no todo specified"
+			exit 1
+		fi
+
+		rm ~/.local/share/plansh/todo/done/"$2"
+		;;
+	'undone')
+		if [ -z "$2" ]
+		then
+			echo "todo undone: no todo specified"
+			exit 1
+		fi
+		mv ~/.local/share/plansh/todo/done/"$2" ~/.local/share/plansh/todo/todo
+		;;
+	*)
+		if [ -f ~/.local/share/plansh/todo/todo/"$1" ]
+		then
+			cat ~/.local/share/plansh/todo/todo/"$1"
+		elif [ -f ~/.local/share/plansh/todo/done/"$1" ]
+		then
+			cat ~/.local/share/plansh/todo/done/"$1"
+		else
+			echo "Date:"
+			while read DATE && ! date -d "$DATE" &> /dev/null; do echo 'Bad Date'; done
+			echo "Task:"
+			read LINE
+			echo "$DATE" > ~/.local/share/plansh/todo/tmp
+			echo "$LINE" >> ~/.local/share/plansh/todo/tmp
+			mv ~/.local/share/plansh/todo/tmp ~/.local/share/plansh/todo/todo/"$1"
+		fi
+		;;
+esac

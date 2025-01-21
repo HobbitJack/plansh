@@ -1,0 +1,76 @@
+#!/usr/bin/sh
+
+case $1 in
+	''|'ls')
+		rm -f ~/.local/share/plansh/note/*~
+		ls -1 ~/.local/share/plansh/note/
+		;;
+	'-h'|'--help'|'help')
+		echo 'Usage: note [COMMAND|NOTE]'
+		echo 'manage notes'
+		echo
+		echo "Notes are saved at '~/.local/share/plansh/note/'."
+		echo
+		echo "With no command, list notes and remove Emacs tempfiles."
+		echo
+		echo 'COMMAND:'
+		echo '    cat     NOTE    print the contents of NOTE to STDOUT'
+		echo '    export  NOTE    export NOTE as a file to PWD'
+		echo '    import  FILE    import FILE as a note'
+		echo '    init            create note directory'
+		echo '    rm      NOTE    delete NOTE'
+		echo '    help            print this help'
+		echo '    version         print version and license information'
+		echo
+		echo 'NOTE:'
+		echo "    Open NOTE in '`basename ${EDITOR:-vi}`'"
+		exit
+		;;
+	'-v'|'--version'|'version')
+		echo 'note v2.2.2'
+		echo 'Copyright (C) 2024 Jack Renton Uteg.'
+		echo 'License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.'
+		echo 'This is free software: you are free to change and redistribute it.'
+		echo 'There is NO WARRANTY, to the extent permitted by law.'
+		echo
+		echo 'Written by Jack Renton Uteg.'
+		exit
+		;;
+	'cat')
+		if [ -z "$2" ]
+		then
+			echo "note cat: no note specified"
+			exit 1
+		fi
+		cat ~/.local/share/plansh/note/"$2"
+		;;
+	'export')
+		if [ -z "$2" ]
+		then
+			echo "note export: no file specified"
+			exit 1
+		fi
+		cp ~/.local/share/plansh/note/"$2" ./"$2"
+		;;
+	'import')
+		if [ -z "$2" ]
+		then
+			echo "note import: no file specified"
+			exit 1
+		fi
+		cp "$2" ~/.local/share/plansh/note/"$2"
+		;;
+	'init')
+		mkdir -p ~/.local/share/plansh/note/
+		;;
+	'rm')
+		if [ -z "$2" ]
+		then
+			echo "note rm: no note specified"
+			exit 1
+		fi
+		rm ~/.local/share/plansh/note/"$2"
+		;;
+	*)
+		${EDITOR:-vi} ~/.local/share/plansh/note/"$1"
+esac
