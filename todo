@@ -14,10 +14,9 @@ case $1 in
 		echo "With no command, list pending to-dos and remove Emacs tempfiles."
 		echo
 		echo 'COMMAND:'
-		echo '    done            list completed to-dos'
+		echo '    done   [TODO]   list completed to-dos, or mark TODO as done'
 		echo "    edit   TODO     open TODO in '`basename ${EDITOR:-vi}`'"
 		echo '    init            create todo directory'
-		echo '    mark   TODO     mark TODO as done'
 		echo '    rm     TODO     delete TODO'
 		echo '    undone DONE     mark task DONE as to-do'
 		echo '    help            print this help'
@@ -40,27 +39,23 @@ case $1 in
 		exit
 		;;
 	'done')
-		ls -rt ~/.local/share/plansh/todo/done | aff -StE 'date -d@$(stat ~/.local/share/plansh/todo/done/"$line" -c%Y) "+%x @ %R"'
+		if [ -z "$2" ]
+		then
+			ls -rt ~/.local/share/plansh/todo/done | aff -StE 'date -d"@$(stat ~/.local/share/plansh/todo/done/"$LINE" -c%Y)" "+%x @ %R"'
+		elif [ -f ~/.local/share/plansh/todo/todo/"$2" ]
+		then
+			mv ~/.local/share/plansh/todo/todo/"$2" ~/.local/share/plansh/todo/done
+			touch ~/.local/share/plansh/todo/done/"$2"
+		else
+			echo "todo done: $2: no such todo"
+			exit 1
+		fi
+
 		;;
 	'init')
 		mkdir -p ~/.local/share/plansh/todo
 		mkdir ~/.local/share/plansh/todo/todo
 		mkdir ~/.local/share/plansh/todo/done
-		;;
-	'mark')
-		if [ -z "$2" ]
-		then
-			echo "todo mark: no todo specified"
-			exit 1
-		fi
-		if [ -f ~/.local/share/plansh/todo/todo/"$2" ]
-		then
-			mv ~/.local/share/plansh/todo/todo/"$2" ~/.local/share/plansh/todo/done
-			touch ~/.local/share/plansh/todo/done/"$2"
-		else
-			echo "todo mark: $2: no such todo"
-			exit 1
-		fi
 		;;
 	'edit')
 		if [ -z "$2" ]

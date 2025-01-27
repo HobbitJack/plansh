@@ -14,7 +14,7 @@ case $1 in
 		echo "With no command, list notes and remove Emacs tempfiles."
 		echo
 		echo 'COMMAND:'
-		echo '    cat     NOTE    print the contents of NOTE to STDOUT'
+		echo "    edit    NOTE    Open NOTE in '`basename ${EDITOR:-vi}`'"
 		echo '    export  NOTE    export NOTE as a file to PWD'
 		echo '    import  FILE    import FILE as a note'
 		echo '    init            create note directory'
@@ -23,7 +23,7 @@ case $1 in
 		echo '    version         print version and license information'
 		echo
 		echo 'NOTE:'
-		echo "    Open NOTE in '`basename ${EDITOR:-vi}`'"
+		echo '    print the contents of NOTE to STDOUT'
 		exit
 		;;
 	'-v'|'--version'|'version')
@@ -36,13 +36,13 @@ case $1 in
 		echo 'Written by Jack Renton Uteg.'
 		exit
 		;;
-	'cat')
+	'edit')
 		if [ -z "$2" ]
 		then
 			echo "note cat: no note specified"
 			exit 1
 		fi
-		cat ~/.local/share/plansh/note/"$2"
+		${EDITOR:-vi} ~/.local/share/plansh/note/"$2"
 		;;
 	'export')
 		if [ -z "$2" ]
@@ -72,5 +72,11 @@ case $1 in
 		rm ~/.local/share/plansh/note/"$2"
 		;;
 	*)
-		${EDITOR:-vi} ~/.local/share/plansh/note/"$1"
+		if [ -f ~/.local/share/plansh/note/"$1" ]
+		then
+			cat ~/.local/share/plansh/note/"$1"
+		else
+			${EDITOR:-vi} ~/.local/share/plansh/note/"$1x"
+		fi
+		;;
 esac
